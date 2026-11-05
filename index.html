@@ -135,6 +135,7 @@
   .face.back .term { color: inherit; }
   .term.long { font-size: 34px; line-height: 1.12; font-family: var(--body); font-weight: 700; letter-spacing: 0; }
   .term.mid { font-size: 42px; }
+  .term.long.xl { font-size: 24px; line-height: 1.25; }
   .face .hint { font-size: 12px; color: var(--muted); }
   .face.back .hint { color: inherit; opacity: .75; }
   .corner { position: absolute; top: 14px; left: 16px; font-size: 12px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -146,6 +147,7 @@
   .prompt .term { font-size: 56px; }
   .prompt .term.long { font-size: 26px; }
   .prompt .term.mid { font-size: 38px; }
+  .prompt .term.long.xl { font-size: 21px; }
   .options { display: grid; gap: 10px; }
   .opt { text-align: left; border: 0; border-radius: 14px; padding: 14px 16px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); font-weight: 600; font-size: 16px; display: flex; gap: 12px; align-items: center; transition: transform .12s, background .2s; }
   .opt .k { flex: none; width: 26px; height: 26px; border-radius: 8px; background: var(--surface-2); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--muted); }
@@ -186,6 +188,8 @@
   .li .m { min-width: 0; font-weight: 600; }
   .li .m .yours { display: block; font-weight: 500; font-size: 12px; color: var(--bad); }
   .li .n { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .li.wide { grid-template-columns: 1fr auto; row-gap: 2px; }
+  .li.wide .c { grid-column: 1 / -1; font-family: var(--body); font-size: 15px; }
 
   .timer { font-family: var(--display); font-weight: 800; font-size: 28px; font-variant-numeric: tabular-nums; color: var(--ink); }
   .timer.low { color: var(--bad); }
@@ -335,12 +339,20 @@ const allData = [
       { t: "phonetic", f: "W", b: "Whiskey" },
       { t: "phonetic", f: "X", b: "X-Ray" },
       { t: "phonetic", f: "Y", b: "Yankee" },
-      { t: "phonetic", f: "Z", b: "Zulu" }
+      { t: "phonetic", f: "Z", b: "Zulu" },
+      { t: "golden", f: "Of what country are you a citizen?", b: "¿De qué país es usted ciudadano?" },
+      { t: "golden", f: "In what country were you born?", b: "¿En qué país nació?" },
+      { t: "golden", f: "Do you have immigration documents (in order) to be in the United States legally?", b: "¿Tiene (usted) documentos de inmigración para estar en los Estados Unidos legalmente?" },
+      { t: "golden", f: "Are you here in the United States illegally?", b: "¿Está (usted) aquí en los Estados Unidos ilegalmente?" },
+      { t: "golden", f: "You are under arrest for being in the United States illegally.", b: "Está bajo arresto por estar en los Estados Unidos ilegalmente." }
     ];
 
 const CARDS = allData.map((d, i) => ({ id: i, key: d.f, cat: d.t === "10-72" ? "10-code" : d.t, f: d.f, b: d.b }));
-const CAT_TAG = { "10-code": "Border Patrol 10-Code", finger: "Finger Code", phonetic: "Phonetic Alphabet" };
-const CATS = [["all", "All"], ["10-code", "10-Codes"], ["finger", "Finger"], ["phonetic", "Phonetic"]];
+const CAT_TAG = { "10-code": "Border Patrol 10-Code", finger: "Finger Code", phonetic: "Phonetic Alphabet", golden: "Four Golden Questions" };
+const CATS = [["all", "All"], ["10-code", "10-Codes"], ["finger", "Finger"], ["phonetic", "Phonetic"], ["golden", "Spanish"]];
+const GOLD = c => c.cat === "golden";
+// Label over the meaning side; the Spanish deck's "meaning" is the Spanish line.
+const backTag = (c, official) => GOLD(c) ? "En español" : official ? "Official meaning" : "Meaning";
 const DIRS = [["f2b", "Code"], ["b2f", "Meaning"], ["mix", "Mixed"]];
 const MODES = [
   ["cards", "Cards", '<rect x="3" y="6" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/>'],
@@ -383,7 +395,7 @@ const pool = () => store.settings.cat === "all" ? CARDS : CARDS.filter(c => c.ca
 const resolveDir = () => store.settings.dir === "mix" ? (Math.random() < .5 ? "f2b" : "b2f") : store.settings.dir;
 const ask = (c, d) => d === "f2b" ? c.f : c.b;
 const ans = (c, d) => d === "f2b" ? c.b : c.f;
-const sizeClass = t => t.length > 12 ? "long" : t.length > 6 ? "mid" : "";
+const sizeClass = t => t.length > 50 ? "long xl" : t.length > 12 ? "long" : t.length > 6 ? "mid" : "";
 const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
 const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -404,7 +416,7 @@ function makeQuestion(c) {
 }
 
 // ---------- lenient answer check ----------
-const norm = s => s.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
+const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
 const STOP = new Set("a an the of to in at on for is be and or with".split(" "));
 function lev(a, b) {
   const m = a.length, n = b.length; if (!m) return n; if (!n) return m;
@@ -457,7 +469,7 @@ function checkCode(input, f) {
   if (m) forms.add(m[1]);
   return forms.has(u) || forms.has(u.replace(/ /g, "")) ? 2 : 0;
 }
-const check = (input, c, d) => d === "f2b" ? checkMeaning(input, c.b) : checkCode(input, c.f);
+const check = (input, c, d) => d === "f2b" ? checkMeaning(input, c.b) : GOLD(c) ? checkMeaning(input, c.f) : checkCode(input, c.f);
 
 // ---------- chrome: stats, modes, filters ----------
 let mode = "cards";
@@ -483,7 +495,8 @@ function renderFilters() {
     const n = k === "all" ? CARDS.length : CARDS.filter(c => c.cat === k).length;
     return `<button class="chip" data-cat="${k}" aria-pressed="${store.settings.cat === k}">${label}<small>${n}</small></button>`;
   }).join("");
-  $("#dir").innerHTML = DIRS.map(([k, label]) => `<button data-dir="${k}" aria-pressed="${store.settings.dir === k}">${label}</button>`).join("");
+  const lab = store.settings.cat === "golden" ? { f2b: "English", b2f: "Spanish" } : {};
+  $("#dir").innerHTML = DIRS.map(([k, label]) => `<button data-dir="${k}" aria-pressed="${store.settings.dir === k}">${lab[k] || label}</button>`).join("");
 }
 $("#modes").addEventListener("click", e => { const b = e.target.closest("[data-mode]"); if (b) go(b.dataset.mode); });
 $("#cats").addEventListener("click", e => {
@@ -528,9 +541,9 @@ function Cards() {
     view.innerHTML = `
       <div class="flip ${flipped ? "flipped" : ""}" data-act="flip" id="flip">
         <div class="flip-inner">
-          <div class="face front"><span class="corner">${i + 1} / ${deck.length}</span><span class="tag">${d === "f2b" ? CAT_TAG[c.cat] : "Meaning"}</span>
+          <div class="face front"><span class="corner">${i + 1} / ${deck.length}</span><span class="tag">${d === "f2b" ? CAT_TAG[c.cat] : backTag(c)}</span>
             <div class="term ${sizeClass(ask(c, d))}">${esc(ask(c, d))}</div><div class="hint">Tap to flip · swipe for next</div></div>
-          <div class="face back"><span class="corner">${i + 1} / ${deck.length}</span><span class="tag">${d === "f2b" ? "Official meaning" : CAT_TAG[c.cat]}</span>
+          <div class="face back"><span class="corner">${i + 1} / ${deck.length}</span><span class="tag">${d === "f2b" ? backTag(c, true) : CAT_TAG[c.cat]}</span>
             <div class="term ${sizeClass(ans(c, d))}">${esc(ans(c, d))}</div><div class="hint">Tap to flip back</div></div>
         </div>
       </div>
@@ -585,7 +598,7 @@ function Learn(opts) {
       <div class="topline"><span>Set progress <b>${done}</b> / ${batch.length}</span><span>${left} left to master</span></div>
       <div class="bar"><span style="width:${done / batch.length * 100}%"></span></div>
       <div class="prompt" data-act="reveal" style="cursor:pointer">
-        <span class="tag">${d === "f2b" ? CAT_TAG[c.cat] : "Meaning"}</span>
+        <span class="tag">${d === "f2b" ? CAT_TAG[c.cat] : backTag(c)}</span>
         <div class="term ${sizeClass(ask(c, d))}">${esc(ask(c, d))}</div>
         ${revealed ? "" : `<div class="q">Say it in your head, then tap to check</div>`}
       </div>
@@ -643,13 +656,14 @@ function Quiz(opts) {
   function draw() {
     locked = false;
     const q = qs[qi];
-    const isCode = q.d === "b2f";
+    const isCode = q.d === "b2f" && !GOLD(q.c);
+    const qText = GOLD(q.c) ? (q.d === "f2b" ? "How do you say it in Spanish?" : "What does it mean in English?") : q.d === "f2b" ? "What does it mean?" : "Which code is it?";
     view.innerHTML = `
       <div class="topline"><span>Question <b>${qi + 1}</b> / ${qs.length}</span><span class="score-pill">${score} right</span></div>
       <div class="bar"><span style="width:${qi / qs.length * 100}%"></span></div>
-      <div class="prompt"><span class="tag">${q.d === "f2b" ? CAT_TAG[q.c.cat] : "Meaning"}</span>
+      <div class="prompt"><span class="tag">${q.d === "f2b" ? CAT_TAG[q.c.cat] : backTag(q.c)}</span>
         <div class="term ${sizeClass(ask(q.c, q.d))}">${esc(ask(q.c, q.d))}</div>
-        <div class="q">${q.d === "f2b" ? "What does it mean?" : "Which code is it?"}</div></div>
+        <div class="q">${qText}</div></div>
       <div class="options" id="opts">${q.opts.map((o, k) => `<button class="opt ${isCode ? "code" : ""}" data-act="pick" data-id="${o.id}"><span class="k">${"ABCD"[k]}</span><span>${esc(ans(o, q.d))}</span></button>`).join("")}</div>
       <div id="after"></div>`;
   }
@@ -687,7 +701,7 @@ function Quiz(opts) {
   src ? begin(shuffle(src)) : setup();
 }
 function missList(ms) {
-  return `<div class="list">${ms.map(m => `<div class="li"><span class="c">${esc(m.c.f)}</span><span class="m">${esc(m.c.b)}${m.yours != null ? `<span class="yours">You said: ${esc(m.yours || "(blank)")}</span>` : ""}</span><span></span></div>`).join("")}</div>`;
+  return `<div class="list">${ms.map(m => `<div class="li${GOLD(m.c) ? " wide" : ""}"><span class="c">${esc(m.c.f)}</span><span class="m">${esc(m.c.b)}${m.yours != null ? `<span class="yours">You said: ${esc(m.yours || "(blank)")}</span>` : ""}</span><span></span></div>`).join("")}</div>`;
 }
 
 // ---------- Type the answer ----------
@@ -710,13 +724,16 @@ function TypeIt(opts) {
   function draw() {
     state = "asking";
     const q = qs[qi];
+    const g = GOLD(q.c), es = q.d === "f2b";
+    const qText = g ? (es ? "Type it in Spanish" : "Type it in English") : es ? "Type the meaning" : q.c.cat === "phonetic" ? "Type the letter" : "Type the code";
+    const hold = g ? (es ? "Spanish" : "English") : es ? "Meaning" : q.c.cat === "phonetic" ? "Letter" : "e.g. 10-4";
     view.innerHTML = `
       <div class="topline"><span>Card <b>${qi + 1}</b> / ${qs.length}</span><span class="score-pill">${score} right</span></div>
       <div class="bar"><span style="width:${qi / qs.length * 100}%"></span></div>
-      <div class="prompt"><span class="tag">${q.d === "f2b" ? CAT_TAG[q.c.cat] : "Meaning"}</span>
+      <div class="prompt"><span class="tag">${es ? CAT_TAG[q.c.cat] : backTag(q.c)}</span>
         <div class="term ${sizeClass(ask(q.c, q.d))}">${esc(ask(q.c, q.d))}</div>
-        <div class="q">${q.d === "f2b" ? "Type the meaning" : q.c.cat === "phonetic" ? "Type the letter" : "Type the code"}</div></div>
-      <form class="typebox" id="tf" autocomplete="off"><input id="typein" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="${q.d === "f2b" ? "Meaning" : q.c.cat === "phonetic" ? "Letter" : "e.g. 10-4"}" aria-label="Your answer"><button class="btn primary" type="submit">Check</button></form>
+        <div class="q">${qText}</div></div>
+      <form class="typebox" id="tf" autocomplete="off"><input id="typein" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="${hold}" aria-label="Your answer"><button class="btn primary" type="submit">Check</button></form>
       <div id="fb"></div>
       <button class="btn ghost" data-act="skip">I don't know, show me</button>`;
     $("#tf").addEventListener("submit", e => { e.preventDefault(); state === "asking" ? grade($("#typein").value) : act.adv(); });
@@ -795,7 +812,7 @@ function Speed() {
     let c; const p = pool();
     do { c = p[Math.floor(Math.random() * p.length)]; } while (q && p.length > 1 && c.id === q.c.id);
     q = makeQuestion(c); locked = false;
-    const isCode = q.d === "b2f";
+    const isCode = q.d === "b2f" && !GOLD(q.c);
     $("#sq").innerHTML = `
       <div style="display:grid;gap:14px">
       <div class="prompt" id="sp" style="min-height:130px"><div class="term ${sizeClass(ask(q.c, q.d))}">${esc(ask(q.c, q.d))}</div></div>
@@ -839,7 +856,7 @@ function Missed() {
         <p class="muted">Get a card right twice in a row and it drops off this list.</p>
         <div class="row"><button class="btn primary" data-act="learnm">Learn these</button><button class="btn" data-act="quizm" ${ms.length < 1 ? "disabled" : ""}>Quiz these</button></div>
         <button class="btn" data-act="typem">Type these from memory</button></div>
-      <div class="list">${ms.map(c => `<div class="li"><span class="c">${esc(c.f)}</span><span class="m">${esc(c.b)}</span><span class="n">missed ${P(c).wrong}&times;</span></div>`).join("")}</div>
+      <div class="list">${ms.map(c => `<div class="li${GOLD(c) ? " wide" : ""}"><span class="c">${esc(c.f)}</span><span class="m">${esc(c.b)}</span><span class="n">missed ${P(c).wrong}&times;</span></div>`).join("")}</div>
       <button class="btn ghost" data-act="clear">${armed ? "Tap again to clear the list" : "Clear this list"}</button>`;
   }
   const list = () => pool().filter(missed);
