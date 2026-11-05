@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>USBP Study Flashcards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap">
+<style>
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+  /* Layout: one phone-width column; sticky mode bar; a single study surface below that each mode fills. */
+  :root {
+    --bg: #edf1ea;
+    --surface: #ffffff;
+    --surface-2: #f6f8f4;
+    --ink: #15221a;
+    --muted: #5a6a5f;
+    --line: #d6ded3;
+    --accent: #1f6040;
+    --accent-ink: #ffffff;
+    --accent-soft: #dbeadf;
+    --signal: #f0a414;
+    --signal-soft: #fdf0d2;
+    --good: #18864a;
+    --good-soft: #d9f1e2;
+    --bad: #c63f2a;
+    --bad-soft: #fbe1dc;
+    --shadow: 0 1px 2px rgba(21, 34, 26, .06), 0 8px 24px -12px rgba(21, 34, 26, .25);
+    --display: "Saira Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+    --body: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1511; --surface: #17211b; --surface-2: #1c2821; --ink: #e6eee8; --muted: #93a598;
+      --line: #2a3a30; --accent: #58bd85; --accent-ink: #0b1a11; --accent-soft: #1c3426;
+      --signal: #f4b43a; --signal-soft: #3a2e14; --good: #4cc27a; --good-soft: #173a25;
+      --bad: #ef6a54; --bad-soft: #42201a; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px -14px rgba(0,0,0,.7);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1511; --surface: #17211b; --surface-2: #1c2821; --ink: #e6eee8; --muted: #93a598;
+    --line: #2a3a30; --accent: #58bd85; --accent-ink: #0b1a11; --accent-soft: #1c3426;
+    --signal: #f4b43a; --signal-soft: #3a2e14; --good: #4cc27a; --good-soft: #173a25;
+    --bad: #ef6a54; --bad-soft: #42201a; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px -14px rgba(0,0,0,.7);
+    color-scheme: dark;
+  }
+
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 0 32px;
+  }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; }
+  .app { max-width: 520px; margin: 0 auto; }
+
+  header.top { padding-top: 18px; display: grid; gap: 10px; }
+  .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  .wave { display: inline-flex; gap: 2px; align-items: center; height: 12px; }
+  .wave i { width: 3px; border-radius: 2px; background: var(--signal); animation: pulse 1.4s ease-in-out infinite; }
+  .wave i:nth-child(1) { height: 5px; } .wave i:nth-child(2) { height: 10px; animation-delay: .15s; } .wave i:nth-child(3) { height: 7px; animation-delay: .3s; } .wave i:nth-child(4) { height: 12px; animation-delay: .45s; }
+  @keyframes pulse { 50% { transform: scaleY(.45); } }
+  h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1; letter-spacing: .01em; text-wrap: balance; }
+  .stats { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; font-size: 13px; color: var(--muted); }
+  .stats b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .meter { grid-column: 1 / -1; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; display: flex; }
+  .meter span { height: 100%; transition: width .5s ease; }
+  .meter .m-master { background: var(--accent); }
+  .meter .m-learn { background: var(--signal); }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+
+  nav.modes {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg);
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 12px 0 8px; margin-top: 4px;
+  }
+  .mode {
+    border: 0; background: transparent; border-radius: 12px; padding: 8px 2px 6px; display: grid; justify-items: center; gap: 3px;
+    font-size: 12px; font-weight: 600; color: var(--muted); position: relative; transition: background .2s, color .2s;
+  }
+  .mode svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .mode[aria-current="page"] { background: var(--accent); color: var(--accent-ink); }
+  .mode .dot { position: absolute; top: 4px; right: calc(50% - 18px); min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: var(--bad); color: #fff; font-size: 10px; line-height: 16px; font-weight: 700; }
+
+  .filters { display: grid; gap: 8px; padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+  .chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .chip small { font-weight: 500; opacity: .75; margin-left: 3px; font-variant-numeric: tabular-nums; }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .dirrow { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 2px; }
+  .seg button { border: 0; background: transparent; border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+
+  main { display: grid; gap: 14px; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  .btn { border: 0; border-radius: 14px; padding: 14px 12px; font-weight: 700; font-size: 15px; background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); transition: transform .12s; }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+  .btn.signal { background: var(--signal); color: #1d1400; box-shadow: none; }
+  .btn.ghost { background: transparent; box-shadow: none; color: var(--muted); font-weight: 600; font-size: 14px; padding: 8px; }
+  .btn.good { background: var(--good-soft); color: var(--good); box-shadow: inset 0 0 0 1.5px var(--good); }
+  .btn.bad { background: var(--bad-soft); color: var(--bad); box-shadow: inset 0 0 0 1.5px var(--bad); }
+  .btn[disabled] { opacity: .45; pointer-events: none; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .center { text-align: center; }
+  .topline { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; gap: 10px; }
+  .topline b { color: var(--ink); }
+  .bar { height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .35s ease; }
+  .bar.signal span { background: var(--signal); }
+
+  /* flip card */
+  .flip { perspective: 1100px; height: 290px; cursor: pointer; touch-action: pan-y; user-select: none; }
+  .flip-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .45s cubic-bezier(.3,.7,.3,1); }
+  .flip.flipped .flip-inner { transform: rotateY(180deg); }
+  .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 22px; display: grid; place-items: center; align-content: center; gap: 10px; padding: 24px; text-align: center; box-shadow: var(--shadow); }
+  .face.front { background: var(--surface); border: 1px solid var(--line); }
+  .face.back { background: var(--accent); color: var(--accent-ink); transform: rotateY(180deg); }
+  .tag { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 4px 9px; border-radius: 6px; background: var(--signal-soft); color: var(--ink); }
+  .face.back .tag { background: rgba(255,255,255,.18); color: inherit; }
+  .term { font-family: var(--display); font-weight: 800; font-size: 64px; line-height: 1; letter-spacing: .01em; color: var(--accent); }
+  .face.back .term { color: inherit; }
+  .term.long { font-size: 34px; line-height: 1.12; font-family: var(--body); font-weight: 700; letter-spacing: 0; }
+  .term.mid { font-size: 42px; }
+  .face .hint { font-size: 12px; color: var(--muted); }
+  .face.back .hint { color: inherit; opacity: .75; }
+  .corner { position: absolute; top: 14px; left: 16px; font-size: 12px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .face.back .corner { color: inherit; opacity: .7; }
+
+  /* prompt card for quiz/type/speed/learn */
+  .prompt { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 22px 18px; display: grid; justify-items: center; gap: 10px; text-align: center; box-shadow: var(--shadow); min-height: 170px; align-content: center; }
+  .prompt .q { font-size: 13px; color: var(--muted); }
+  .prompt .term { font-size: 56px; }
+  .prompt .term.long { font-size: 26px; }
+  .prompt .term.mid { font-size: 38px; }
+  .options { display: grid; gap: 10px; }
+  .opt { text-align: left; border: 0; border-radius: 14px; padding: 14px 16px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); font-weight: 600; font-size: 16px; display: flex; gap: 12px; align-items: center; transition: transform .12s, background .2s; }
+  .opt .k { flex: none; width: 26px; height: 26px; border-radius: 8px; background: var(--surface-2); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .opt.code { font-family: var(--display); font-size: 24px; font-weight: 700; letter-spacing: .02em; }
+  .opt:active { transform: scale(.98); }
+  .opt.right { background: var(--good-soft); box-shadow: inset 0 0 0 2px var(--good); color: var(--good); animation: pop .35s; }
+  .opt.wrong { background: var(--bad-soft); box-shadow: inset 0 0 0 2px var(--bad); color: var(--bad); animation: shake .35s; }
+  .opt.dim { opacity: .5; }
+  .options.locked .opt { pointer-events: none; }
+  @keyframes pop { 40% { transform: scale(1.03); } }
+  @keyframes shake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+
+  .answer-reveal { background: var(--accent); color: var(--accent-ink); border-radius: 16px; padding: 14px 16px; text-align: center; font-weight: 700; font-size: 18px; animation: rise .3s ease; }
+  @keyframes rise { from { transform: translateY(6px); opacity: .4; } }
+
+  .typebox { display: flex; gap: 8px; }
+  .typebox input { flex: 1; min-width: 0; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 14px; padding: 14px; font: inherit; font-size: 17px; }
+  .typebox input:focus { border-color: var(--accent); outline: none; }
+  .feedback { border-radius: 16px; padding: 14px 16px; display: grid; gap: 6px; animation: rise .25s ease; }
+  .feedback.ok { background: var(--good-soft); color: var(--good); }
+  .feedback.no { background: var(--bad-soft); color: var(--bad); }
+  .feedback .ans { color: var(--ink); font-weight: 700; font-size: 17px; }
+  .feedback .yours { color: var(--muted); font-size: 13px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; display: grid; gap: 14px; }
+  .panel h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 26px; line-height: 1.05; }
+  .panel p { margin: 0; }
+  .choose { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .choose button { border: 1.5px solid var(--line); background: var(--surface-2); border-radius: 12px; padding: 10px 4px; font-weight: 700; font-size: 14px; }
+  .choose button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .big { font-family: var(--display); font-weight: 800; font-size: 72px; line-height: .9; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .big small { font-size: 28px; color: var(--muted); }
+  .result-head { display: grid; justify-items: center; gap: 4px; text-align: center; padding: 6px 0; }
+
+  .list { display: grid; border-top: 1px solid var(--line); }
+  .li { display: grid; grid-template-columns: 78px 1fr auto; gap: 10px; align-items: baseline; padding: 11px 2px; border-bottom: 1px solid var(--line); }
+  .li .c { font-family: var(--display); font-weight: 700; font-size: 20px; color: var(--accent); }
+  .li .m { min-width: 0; font-weight: 600; }
+  .li .m .yours { display: block; font-weight: 500; font-size: 12px; color: var(--bad); }
+  .li .n { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .timer { font-family: var(--display); font-weight: 800; font-size: 28px; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .timer.low { color: var(--bad); }
+  .score-pill { background: var(--signal-soft); color: var(--ink); border-radius: 99px; padding: 4px 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .flash-ok { animation: flashok .3s; } .flash-no { animation: flashno .3s; }
+  @keyframes flashok { 50% { box-shadow: 0 0 0 4px var(--good); } }
+  @keyframes flashno { 50% { box-shadow: 0 0 0 4px var(--bad); } }
+
+  .empty { text-align: center; padding: 28px 12px; display: grid; gap: 8px; justify-items: center; }
+  .empty .big { font-size: 48px; }
+  footer { margin-top: 28px; display: flex; justify-content: center; }
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; width: 100%; height: 100%; }
+
+  @media (max-width: 380px) {
+    .mode { font-size: 11px; }
+    .term { font-size: 54px; }
+    .prompt .term { font-size: 48px; }
+    .li { grid-template-columns: 64px 1fr auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="eyebrow"><span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Border Patrol radio codes</div>
+    <h1>USBP Study Flashcards</h1>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <nav class="modes" id="modes" aria-label="Study modes"></nav>
+
+  <div class="filters">
+    <div class="chips" id="cats" role="group" aria-label="Category"></div>
+    <div class="dirrow"><span>Ask with</span><div class="seg" id="dir" role="group" aria-label="Question direction"></div></div>
+  </div>
+
+  <main id="view" aria-live="polite"></main>
+
+  <footer><button class="btn ghost" id="reset">Reset my progress</button></footer>
+</div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+// Card data, exactly as in the original deck.
+const allData = [
+      { t: "10-code", f: "10-1", b: "Receiving poorly" },
+      { t: "10-code", f: "10-2", b: "Receiving well" },
+      { t: "10-code", f: "10-3", b: "Disregard last" },
+      { t: "10-code", f: "10-4", b: "Acknowledged" },
+      { t: "10-code", f: "10-5", b: "BOLO (Be On the Lookout)" },
+      { t: "10-code", f: "10-6", b: "Temp. busy" },
+      { t: "10-code", f: "10-7", b: "Out of service" },
+      { t: "10-code", f: "10-8", b: "In service at:" },
+      { t: "10-code", f: "10-9", b: "Repeat last" },
+      { t: "10-code", f: "10-10", b: "Emergency Assistance" },
+      { t: "10-code", f: "10-11", b: "Investigate subject" },
+      { t: "10-code", f: "10-12", b: "Visitors/officials present" },
+      { t: "10-code", f: "10-13", b: "En route to:" },
+      { t: "10-code", f: "10-14", b: "Establish traffic checkpoint" },
+      { t: "10-code", f: "10-15", b: "Subjects in custody" },
+      { t: "10-code", f: "10-16", b: "Transport request" },
+      { t: "10-code", f: "10-17", b: "Inspection party will arrive at:" },
+      { t: "10-code", f: "10-18", b: "Security check" },
+      { t: "10-code", f: "10-19", b: "No traffic/all good" },
+      { t: "10-code", f: "10-20", b: "What is your location" },
+      { t: "10-code", f: "10-21", b: "Phone call" },
+      { t: "10-code", f: "10-22", b: "Report to:" },
+      { t: "10-code", f: "10-23", b: "Restrict radio comms" },
+      { t: "10-code", f: "10-24", b: "Resume radio comms" },
+      { t: "10-code", f: "10-25", b: "Immediate assistance required" },
+      { t: "10-code", f: "10-26", b: "Vehicle stop (single agent)" },
+      { t: "10-code", f: "10-27", b: "Check with civil authorities" },
+      { t: "10-code", f: "10-28", b: "Vehicle registration check" },
+      { t: "10-code", f: "10-29", b: "Vehicle stolen check" },
+      { t: "10-code", f: "10-30", b: "Person speaks English" },
+      { t: "10-code", f: "10-31", b: "Vehicle pursuit" },
+      { t: "10-code", f: "10-32", b: "Vehicle stop (multiple agents)" },
+      { t: "10-code", f: "10-33", b: "Alert - Dangerous person" },
+      { t: "10-code", f: "10-34", b: "Local immigration check" },
+      { t: "10-code", f: "10-35", b: "False document check" },
+      { t: "10-code", f: "10-36", b: "Smuggler check" },
+      { t: "10-code", f: "10-37", b: "Observing traffic at:" },
+      { t: "10-code", f: "10-38", b: "Checkpoint closed" },
+      { t: "10-code", f: "10-39", b: "Positive record check" },
+      { t: "10-code", f: "10-41", b: "Unit on duty at:" },
+      { t: "10-code", f: "10-42", b: "Unit off duty" },
+      { t: "10-code", f: "10-43", b: "Switching channels" },
+      { t: "10-code", f: "10-45", b: "Alien smuggling case" },
+      { t: "10-code", f: "10-46", b: "Narcotics smuggling case" },
+      { t: "10-code", f: "10-50", b: "Immigration check" },
+      { t: "10-code", f: "10-51", b: "Wants/Warrants check" },
+      { t: "10-code", f: "10-52", b: "Criminal history check" },
+      { t: "10-code", f: "10-53", b: "Firearm serial # check" },
+      { t: "10-code", f: "10-54", b: "Vital statistics check" },
+      { t: "10-code", f: "10-57", b: "Driver license check" },
+      { t: "10-code", f: "10-58", b: "Cross index check" },
+      { t: "10-code", f: "10-60", b: "Sensor activation" },
+      { t: "10-72", f: "10-72", b: "TECS lane check" },
+      { t: "10-code", f: "10-79", b: "No unit available" },
+      { t: "10-code", f: "10-81", b: "Assigned unit" },
+      { t: "10-code", f: "10-82", b: "Assigned unit arrived time" },
+      { t: "10-code", f: "10-83", b: "Assignment completed" },
+      { t: "10-code", f: "10-84", b: "Remove unit from assignment" },
+      { t: "10-code", f: "10-85", b: "Create incident ticket" },
+      { t: "10-code", f: "10-86", b: "Vehicle change" },
+      { t: "10-code", f: "10-87", b: "Change work area" },
+      { t: "10-code", f: "10-88", b: "Radio in secure mode" },
+      { t: "10-code", f: "10-89", b: "Radio in unsecure mode" },
+      { t: "10-code", f: "10-90", b: "Request rekey" },
+      { t: "10-code", f: "10-91", b: "Out of radio contact" },
+      { t: "10-code", f: "10-92", b: "Back in radio contact" },
+      { t: "10-code", f: "10-95", b: "Log information" },
+      { t: "10-code", f: "10-97", b: "Begin at-risk transport" },
+      { t: "10-code", f: "10-98", b: "End at-risk transport" },
+      { t: "10-code", f: "10-99", b: "Agent down at: All units respond" },
+      { t: "10-code", f: "10-100", b: "Place Border Patrol Emergency Plan Into Effect" },
+      { t: "10-code", f: "10-101", b: "Bomb threat" },
+      { t: "finger", f: "CODE 2", b: "Urgent" },
+      { t: "finger", f: "CODE 3", b: "Emergency" },
+      { t: "finger", f: "CODE 4", b: "Sit Under Control (Situation Under Control)" },
+      { t: "finger", f: "CODE 5", b: "Stakeout" },
+      { t: "phonetic", f: "A", b: "Alpha" },
+      { t: "phonetic", f: "B", b: "Bravo" },
+      { t: "phonetic", f: "C", b: "Charlie" },
+      { t: "phonetic", f: "D", b: "Delta" },
+      { t: "phonetic", f: "E", b: "Echo" },
+      { t: "phonetic", f: "F", b: "Foxtrot" },
+      { t: "phonetic", f: "G", b: "Golf" },
+      { t: "phonetic", f: "H", b: "Hotel" },
+      { t: "phonetic", f: "I", b: "India" },
+      { t: "phonetic", f: "J", b: "Juliet" },
+      { t: "phonetic", f: "K", b: "Kilo" },
+      { t: "phonetic", f: "L", b: "Lima" },
+      { t: "phonetic", f: "M", b: "Mike" },
+      { t: "phonetic", f: "N", b: "November" },
+      { t: "phonetic", f: "O", b: "Oscar" },
+      { t: "phonetic", f: "P", b: "Papa" },
+      { t: "phonetic", f: "Q", b: "Quebec" },
+      { t: "phonetic", f: "R", b: "Romeo" },
+      { t: "phonetic", f: "S", b: "Sierra" },
+      { t: "phonetic", f: "T", b: "Tango" },
+      { t: "phonetic", f: "U", b: "Uniform" },
+      { t: "phonetic", f: "V", b: "Victor" },
+      { t: "phonetic", f: "W", b: "Whiskey" },
+      { t: "phonetic", f: "X", b: "X-Ray" },
+      { t: "phonetic", f: "Y", b: "Yankee" },
+      { t: "phonetic", f: "Z", b: "Zulu" }
+    ];
+
+const CARDS = allData.map((d, i) => ({ id: i, key: d.f, cat: d.t === "10-72" ? "10-code" : d.t, f: d.f, b: d.b }));
+const CAT_TAG = { "10-code": "Border Patrol 10-Code", finger: "Finger Code", phonetic: "Phonetic Alphabet" };
+const CATS = [["all", "All"], ["10-code", "10-Codes"], ["finger", "Finger"], ["phonetic", "Phonetic"]];
+const DIRS = [["f2b", "Code"], ["b2f", "Meaning"], ["mix", "Mixed"]];
+const MODES = [
+  ["cards", "Cards", '<rect x="3" y="6" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/>'],
+  ["learn", "Learn", '<path d="M12 3v3M12 18v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M3 12h3M18 12h3"/><circle cx="12" cy="12" r="3.5"/>'],
+  ["quiz", "Quiz", '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17.2v.1"/>'],
+  ["type", "Type", '<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>'],
+  ["speed", "Speed", '<circle cx="12" cy="13" r="8"/><path d="M12 13l3-3M10 2h4"/>'],
+  ["missed", "Missed", '<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17v.1"/>'],
+];
+const MASTER_AT = 3;
+
+// ---------- storage (per-viewer, best effort) ----------
+const STORE_KEY = "usbp-trainer-v1";
+let store = { p: {}, best: {}, settings: { cat: "all", dir: "f2b" } };
+try {
+  const raw = localStorage.getItem(STORE_KEY);
+  if (raw) {
+    const s = JSON.parse(raw) || {};
+    store = { p: s.p || {}, best: s.best || {}, settings: Object.assign({ cat: "all", dir: "f2b" }, s.settings || {}) };
+  }
+} catch (e) {}
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {} }
+const P = c => store.p[c.key] || { box: 0, streak: 0, right: 0, wrong: 0, missed: false };
+function record(c, ok) {
+  const p = Object.assign({ box: 0, streak: 0, right: 0, wrong: 0, missed: false }, store.p[c.key]);
+  if (ok) { p.right++; p.streak++; p.box = Math.min(5, p.box + 1); if (p.streak >= 2) p.missed = false; }
+  else { p.wrong++; p.streak = 0; p.box = Math.max(0, p.box - 2); p.missed = true; }
+  store.p[c.key] = p; save(); renderStats(); renderModes();
+}
+const mastered = c => P(c).box >= MASTER_AT;
+const missed = c => P(c).missed;
+const seen = c => !!store.p[c.key];
+
+// ---------- helpers ----------
+const $ = s => document.querySelector(s);
+const view = $("#view");
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pool = () => store.settings.cat === "all" ? CARDS : CARDS.filter(c => c.cat === store.settings.cat);
+const resolveDir = () => store.settings.dir === "mix" ? (Math.random() < .5 ? "f2b" : "b2f") : store.settings.dir;
+const ask = (c, d) => d === "f2b" ? c.f : c.b;
+const ans = (c, d) => d === "f2b" ? c.b : c.f;
+const sizeClass = t => t.length > 12 ? "long" : t.length > 6 ? "mid" : "";
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function distractors(c, d, n) {
+  const used = new Set([ans(c, d).toLowerCase()]);
+  const out = [];
+  for (const x of shuffle(CARDS.filter(x => x.cat === c.cat && x.id !== c.id))) {
+    const t = ans(x, d).toLowerCase();
+    if (used.has(t)) continue;
+    used.add(t); out.push(x);
+    if (out.length >= n) break;
+  }
+  return out;
+}
+function makeQuestion(c) {
+  const d = resolveDir();
+  return { c, d, opts: shuffle([c, ...distractors(c, d, 3)]) };
+}
+
+// ---------- lenient answer check ----------
+const norm = s => s.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
+const STOP = new Set("a an the of to in at on for is be and or with".split(" "));
+function lev(a, b) {
+  const m = a.length, n = b.length; if (!m) return n; if (!n) return m;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+const sim = (a, b) => 1 - lev(a, b) / Math.max(a.length, b.length, 1);
+// "comms" matches "communications", "temp" matches "temporarily"
+function abbrev(short, long) {
+  if (short.length < 3 || long.length <= short.length || short.slice(0, 2) !== long.slice(0, 2)) return false;
+  let j = 0;
+  for (const ch of long) if (ch === short[j]) j++;
+  return j === short.length;
+}
+function wordHit(w, words) {
+  return words.some(x => x === w || (w.length >= 3 && x.length >= 3 && (x.startsWith(w) || w.startsWith(x))) || abbrev(w, x) || abbrev(x, w) || (w.length >= 4 && sim(w, x) >= .75));
+}
+function alternatives(b) {
+  const alts = [b];
+  const m = b.match(/^(.*?)\s*\((.*)\)\s*$/);
+  if (m) {
+    const out = norm(m[1]).split(" "), inn = norm(m[2]).split(" ");
+    const acronym = /^[A-Z]{2,}$/.test(m[1].trim());
+    if (acronym || out.some(w => !STOP.has(w) && inn.includes(w))) alts.push(m[1], m[2]);
+  }
+  return alts.map(norm).filter(Boolean);
+}
+function checkMeaning(input, b) {
+  const u = norm(input); if (!u) return 0;
+  const uw = u.split(" ");
+  let best = 0;
+  for (const alt of alternatives(b)) {
+    if (u === alt) return 2;
+    if (sim(u, alt) >= .8) best = 1;
+    const kw = alt.split(" ").filter(w => !STOP.has(w));
+    if (kw.length && kw.filter(w => wordHit(w, uw)).length / kw.length >= .75) best = 1;
+  }
+  return best;
+}
+function checkCode(input, f) {
+  const u = norm(input), n = norm(f);
+  if (!u) return 0;
+  const forms = new Set([n, n.replace(/ /g, "")]);
+  const m = f.match(/^CODE (\d+)$/i);
+  if (m) forms.add(m[1]);
+  return forms.has(u) || forms.has(u.replace(/ /g, "")) ? 2 : 0;
+}
+const check = (input, c, d) => d === "f2b" ? checkMeaning(input, c.b) : checkCode(input, c.f);
+
+// ---------- chrome: stats, modes, filters ----------
+let mode = "cards";
+let act = {};       // click actions for the current view
+let cleanup = null; // stops timers when leaving a view
+
+function renderStats() {
+  const p = pool();
+  const m = p.filter(mastered).length, l = p.filter(c => seen(c) && !mastered(c)).length, x = p.filter(missed).length;
+  $("#stats").innerHTML =
+    `<div><b>${m}</b> of <b>${p.length}</b> mastered</div><div>${x ? `<b>${x}</b> missed` : ""}</div>
+     <div class="meter" role="img" aria-label="${m} mastered, ${l} learning, ${p.length - m - l} new">
+       <span class="m-master" style="width:${m / p.length * 100}%"></span><span class="m-learn" style="width:${l / p.length * 100}%"></span></div>
+     <div class="legend muted"><span><i style="background:var(--accent)"></i>Mastered</span><span><i style="background:var(--signal)"></i>Learning</span><span><i style="background:var(--line)"></i>New</span></div>`;
+}
+function renderModes() {
+  const mc = pool().filter(missed).length;
+  $("#modes").innerHTML = MODES.map(([k, label, icon]) =>
+    `<button class="mode" data-mode="${k}" ${k === mode ? 'aria-current="page"' : ""}><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg>${label}${k === "missed" && mc ? `<span class="dot">${mc}</span>` : ""}</button>`).join("");
+}
+function renderFilters() {
+  $("#cats").innerHTML = CATS.map(([k, label]) => {
+    const n = k === "all" ? CARDS.length : CARDS.filter(c => c.cat === k).length;
+    return `<button class="chip" data-cat="${k}" aria-pressed="${store.settings.cat === k}">${label}<small>${n}</small></button>`;
+  }).join("");
+  $("#dir").innerHTML = DIRS.map(([k, label]) => `<button data-dir="${k}" aria-pressed="${store.settings.dir === k}">${label}</button>`).join("");
+}
+$("#modes").addEventListener("click", e => { const b = e.target.closest("[data-mode]"); if (b) go(b.dataset.mode); });
+$("#cats").addEventListener("click", e => {
+  const b = e.target.closest("[data-cat]"); if (!b) return;
+  store.settings.cat = b.dataset.cat; save(); renderFilters(); renderStats(); renderModes(); start(mode);
+});
+$("#dir").addEventListener("click", e => {
+  const b = e.target.closest("[data-dir]"); if (!b) return;
+  store.settings.dir = b.dataset.dir; save(); renderFilters(); start(mode);
+});
+view.addEventListener("click", e => { const t = e.target.closest("[data-act]"); if (t && act[t.dataset.act]) act[t.dataset.act](t, e); });
+
+let resetArmed = false;
+$("#reset").addEventListener("click", () => {
+  const b = $("#reset");
+  if (!resetArmed) { resetArmed = true; b.textContent = "Tap again to erase all progress"; b.style.color = "var(--bad)"; setTimeout(() => { resetArmed = false; b.textContent = "Reset my progress"; b.style.color = ""; }, 3500); return; }
+  store.p = {}; store.best = {}; save(); resetArmed = false; b.textContent = "Progress erased"; b.style.color = "";
+  setTimeout(() => { b.textContent = "Reset my progress"; }, 2000);
+  renderStats(); renderModes(); start(mode);
+});
+
+function go(m) {
+  if (!MODES.some(x => x[0] === m)) m = "cards";
+  if (location.hash.slice(1) !== m) { try { history.replaceState(null, "", "#" + m); } catch (e) {} }
+  start(m);
+}
+window.addEventListener("hashchange", () => { const m = location.hash.slice(1); if (m && m !== mode) start(m); });
+
+function start(m, opts = {}) {
+  if (cleanup) { cleanup(); cleanup = null; }
+  mode = MODES.some(x => x[0] === m) ? m : "cards";
+  act = {};
+  renderModes();
+  ({ cards: Cards, learn: Learn, quiz: Quiz, type: TypeIt, speed: Speed, missed: Missed })[mode](opts);
+}
+
+// ---------- Cards ----------
+function Cards() {
+  let deck = pool().slice(), i = 0, flipped = false, dirs = deck.map(resolveDir);
+  function draw() {
+    const c = deck[i], d = dirs[i];
+    view.innerHTML = `
+      <div class="flip ${flipped ? "flipped" : ""}" data-act="flip" id="flip">
+        <div class="flip-inner">
+          <div class="face front"><span class="corner">${i + 1} / ${deck.length}</span><span class="tag">${d === "f2b" ? CAT_TAG[c.cat] : "Meaning"}</span>
+            <div class="term ${sizeClass(ask(c, d))}">${esc(ask(c, d))}</div><div class="hint">Tap to flip · swipe for next</div></div>
+          <div class="face back"><span class="corner">${i + 1} / ${deck.length}</span><span class="tag">${d === "f2b" ? "Official meaning" : CAT_TAG[c.cat]}</span>
+            <div class="term ${sizeClass(ans(c, d))}">${esc(ans(c, d))}</div><div class="hint">Tap to flip back</div></div>
+        </div>
+      </div>
+      <div class="bar"><span style="width:${(i + 1) / deck.length * 100}%"></span></div>
+      <div class="row"><button class="btn" data-act="prev">&larr; Previous</button><button class="btn primary" data-act="next">Next &rarr;</button></div>
+      <div class="row"><button class="btn ghost" data-act="shuffle">Shuffle</button><button class="btn ghost" data-act="restart">Restart</button></div>`;
+    const el = $("#flip"); let x0 = null;
+    el.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
+    el.addEventListener("touchend", e => {
+      if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 50) { e.preventDefault(); move(dx < 0 ? 1 : -1); }
+    });
+  }
+  function move(step) { i = (i + step + deck.length) % deck.length; flipped = false; draw(); }
+  act.flip = () => { flipped = !flipped; $("#flip").classList.toggle("flipped", flipped); };
+  act.next = () => move(1);
+  act.prev = () => move(-1);
+  act.shuffle = () => { deck = shuffle(deck); dirs = deck.map(resolveDir); i = 0; flipped = false; draw(); };
+  act.restart = () => { i = 0; flipped = false; draw(); };
+  const key = e => {
+    if (e.target.tagName === "INPUT") return;
+    if (e.key === "ArrowRight") move(1); else if (e.key === "ArrowLeft") move(-1);
+    else if (e.key === " ") { e.preventDefault(); act.flip(); }
+  };
+  document.addEventListener("keydown", key);
+  cleanup = () => document.removeEventListener("keydown", key);
+  draw();
+}
+
+// ---------- Learn (spaced repetition style) ----------
+function Learn(opts) {
+  const BATCH = 8;
+  const src = opts.pool || pool();
+  let batch, queue, need, done, revealed, cur, curDir, stillCount;
+  function pick() {
+    let cand = src.filter(c => !mastered(c));
+    if (!cand.length) cand = src.slice();
+    cand = shuffle(cand).sort((a, b) => (P(a).box - P(b).box) || (P(b).wrong - P(a).wrong));
+    return cand.slice(0, Math.min(BATCH, cand.length));
+  }
+  function begin() {
+    batch = pick(); queue = shuffle(batch); need = new Map(batch.map(c => [c.id, 1])); done = 0; stillCount = 0;
+    next();
+  }
+  function next() {
+    if (!queue.length) return finish();
+    cur = queue.shift(); curDir = resolveDir(); revealed = false; draw();
+  }
+  function draw() {
+    const c = cur, d = curDir, left = src.filter(x => !mastered(x)).length;
+    view.innerHTML = `
+      <div class="topline"><span>Set progress <b>${done}</b> / ${batch.length}</span><span>${left} left to master</span></div>
+      <div class="bar"><span style="width:${done / batch.length * 100}%"></span></div>
+      <div class="prompt" data-act="reveal" style="cursor:pointer">
+        <span class="tag">${d === "f2b" ? CAT_TAG[c.cat] : "Meaning"}</span>
+        <div class="term ${sizeClass(ask(c, d))}">${esc(ask(c, d))}</div>
+        ${revealed ? "" : `<div class="q">Say it in your head, then tap to check</div>`}
+      </div>
+      ${revealed ? `<div class="answer-reveal">${esc(ans(c, d))}</div>
+        <div class="row"><button class="btn bad" data-act="still">Still learning</button><button class="btn good" data-act="know">Know it</button></div>`
+        : `<button class="btn primary" data-act="reveal">Show answer</button>`}
+      <p class="muted center">Cards you're unsure of come back sooner. Each card needs a sure answer before the set is done.</p>`;
+  }
+  act.reveal = () => { if (!revealed) { revealed = true; draw(); } };
+  act.know = () => {
+    record(cur, true);
+    const n = need.get(cur.id) - 1;
+    if (n <= 0) { done++; need.set(cur.id, 0); } else { need.set(cur.id, n); queue.splice(Math.min(4, queue.length), 0, cur); }
+    next();
+  };
+  act.still = () => {
+    record(cur, false); stillCount++;
+    need.set(cur.id, 2);
+    queue.splice(Math.min(2, queue.length), 0, cur);
+    next();
+  };
+  function finish() {
+    const left = src.filter(x => !mastered(x)).length;
+    confetti();
+    view.innerHTML = `
+      <div class="panel"><div class="result-head"><div class="big">${batch.length}<small> cards</small></div><h2>Set complete</h2>
+        <p class="muted">${stillCount ? `You worked through ${stillCount} shaky answer${stillCount > 1 ? "s" : ""}.` : "Every card was sure on the first try."} ${left ? `${left} card${left > 1 ? "s" : ""} still to master here.` : "Everything here is mastered."}</p></div>
+        <button class="btn primary" data-act="again">${left ? "Next set" : "Review again"}</button>
+        <button class="btn" data-act="toquiz">Test yourself with a quiz</button></div>`;
+  }
+  act.again = () => begin();
+  act.toquiz = () => go("quiz");
+  if (!src.length) { view.innerHTML = `<div class="empty muted">No cards to learn here.</div>`; return; }
+  begin();
+}
+
+// ---------- Multiple choice quiz ----------
+function Quiz(opts) {
+  let len = opts.pool ? opts.pool.length : 10;
+  const src = opts.pool || null;
+  let qs, qi, score, misses, locked, timer;
+  function setup() {
+    const total = pool().length;
+    view.innerHTML = `
+      <div class="panel"><h2>Multiple choice quiz</h2>
+        <p class="muted">Pick the right answer out of four. Use “Ask with” above to quiz code to meaning, meaning to code, or both.</p>
+        <div class="choose" role="group" aria-label="Number of questions">
+          ${[10, 20, total].filter((v, k, a) => a.indexOf(v) === k && v <= total).map(v => `<button data-act="len" data-v="${v}" aria-pressed="${v === len}">${v === total ? `All ${v}` : v}</button>`).join("")}
+        </div>
+        <button class="btn primary" data-act="go">Start quiz</button></div>`;
+  }
+  act.len = t => { len = +t.dataset.v; setup(); };
+  act.go = () => begin(src ? shuffle(src) : shuffle(pool()).slice(0, Math.min(len, pool().length)));
+  function begin(cards) { qs = cards.map(makeQuestion); qi = 0; score = 0; misses = []; draw(); }
+  function draw() {
+    locked = false;
+    const q = qs[qi];
+    const isCode = q.d === "b2f";
+    view.innerHTML = `
+      <div class="topline"><span>Question <b>${qi + 1}</b> / ${qs.length}</span><span class="score-pill">${score} right</span></div>
+      <div class="bar"><span style="width:${qi / qs.length * 100}%"></span></div>
+      <div class="prompt"><span class="tag">${q.d === "f2b" ? CAT_TAG[q.c.cat] : "Meaning"}</span>
+        <div class="term ${sizeClass(ask(q.c, q.d))}">${esc(ask(q.c, q.d))}</div>
+        <div class="q">${q.d === "f2b" ? "What does it mean?" : "Which code is it?"}</div></div>
+      <div class="options" id="opts">${q.opts.map((o, k) => `<button class="opt ${isCode ? "code" : ""}" data-act="pick" data-id="${o.id}"><span class="k">${"ABCD"[k]}</span><span>${esc(ans(o, q.d))}</span></button>`).join("")}</div>
+      <div id="after"></div>`;
+  }
+  act.pick = t => {
+    if (locked) return; locked = true;
+    const q = qs[qi], ok = +t.dataset.id === q.c.id;
+    $("#opts").classList.add("locked");
+    view.querySelectorAll(".opt").forEach(b => {
+      if (+b.dataset.id === q.c.id) b.classList.add("right");
+      else if (b === t) b.classList.add("wrong"); else b.classList.add("dim");
+    });
+    record(q.c, ok);
+    if (ok) { score++; timer = setTimeout(adv, 750); }
+    else {
+      buzz(40);
+      misses.push({ c: q.c, d: q.d, yours: ans(CARDS[+t.dataset.id], q.d) });
+      $("#after").innerHTML = `<button class="btn primary" data-act="adv" style="width:100%">Next &rarr;</button>`;
+    }
+  };
+  act.adv = () => adv();
+  function adv() { clearTimeout(timer); qi++; qi < qs.length ? draw() : finish(); }
+  function finish() {
+    const pct = Math.round(score / qs.length * 100);
+    if (pct === 100) confetti();
+    view.innerHTML = `
+      <div class="panel"><div class="result-head"><div class="big">${score}<small>/${qs.length}</small></div>
+        <h2>${pct === 100 ? "Perfect score" : pct >= 80 ? "Strong work" : pct >= 50 ? "Getting there" : "Keep drilling"}</h2><p class="muted">${pct}% correct</p></div>
+        ${misses.length ? `<div class="row"><button class="btn signal" data-act="retry">Retry the ${misses.length} missed</button></div>` : ""}
+        <div class="row"><button class="btn primary" data-act="new">New quiz</button></div></div>
+      ${misses.length ? `<div><p class="muted" style="margin:0 0 6px">Review what you missed</p>${missList(misses)}</div>` : ""}`;
+  }
+  act.retry = () => begin(shuffle(misses.map(m => m.c)));
+  act.new = () => { start("quiz"); };
+  cleanup = () => clearTimeout(timer);
+  src ? begin(shuffle(src)) : setup();
+}
+function missList(ms) {
+  return `<div class="list">${ms.map(m => `<div class="li"><span class="c">${esc(m.c.f)}</span><span class="m">${esc(m.c.b)}${m.yours != null ? `<span class="yours">You said: ${esc(m.yours || "(blank)")}</span>` : ""}</span><span></span></div>`).join("")}</div>`;
+}
+
+// ---------- Type the answer ----------
+function TypeIt(opts) {
+  let len = 10;
+  let qs, qi, score, misses, state;
+  function setup() {
+    const total = pool().length;
+    view.innerHTML = `
+      <div class="panel"><h2>Type the answer</h2>
+        <p class="muted">Spell it out from memory. Small typos and close wording count, and you can overrule the grader if your answer was right.</p>
+        <div class="choose" role="group" aria-label="Number of questions">
+          ${[10, 20, total].filter((v, k, a) => a.indexOf(v) === k && v <= total).map(v => `<button data-act="len" data-v="${v}" aria-pressed="${v === len}">${v === total ? `All ${v}` : v}</button>`).join("")}
+        </div>
+        <button class="btn primary" data-act="go">Start</button></div>`;
+  }
+  act.len = t => { len = +t.dataset.v; setup(); };
+  act.go = () => begin(opts.pool ? shuffle(opts.pool) : shuffle(pool()).slice(0, Math.min(len, pool().length)));
+  function begin(cards) { qs = cards.map(c => ({ c, d: resolveDir() })); qi = 0; score = 0; misses = []; draw(); }
+  function draw() {
+    state = "asking";
+    const q = qs[qi];
+    view.innerHTML = `
+      <div class="topline"><span>Card <b>${qi + 1}</b> / ${qs.length}</span><span class="score-pill">${score} right</span></div>
+      <div class="bar"><span style="width:${qi / qs.length * 100}%"></span></div>
+      <div class="prompt"><span class="tag">${q.d === "f2b" ? CAT_TAG[q.c.cat] : "Meaning"}</span>
+        <div class="term ${sizeClass(ask(q.c, q.d))}">${esc(ask(q.c, q.d))}</div>
+        <div class="q">${q.d === "f2b" ? "Type the meaning" : q.c.cat === "phonetic" ? "Type the letter" : "Type the code"}</div></div>
+      <form class="typebox" id="tf" autocomplete="off"><input id="typein" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="${q.d === "f2b" ? "Meaning" : q.c.cat === "phonetic" ? "Letter" : "e.g. 10-4"}" aria-label="Your answer"><button class="btn primary" type="submit">Check</button></form>
+      <div id="fb"></div>
+      <button class="btn ghost" data-act="skip">I don't know, show me</button>`;
+    $("#tf").addEventListener("submit", e => { e.preventDefault(); state === "asking" ? grade($("#typein").value) : act.adv(); });
+    try { $("#typein").focus({ preventScroll: true }); } catch (e) {}
+  }
+  function grade(v, skipped) {
+    const q = qs[qi];
+    const r = skipped ? 0 : check(v, q.c, q.d);
+    state = r ? "right" : "wrong";
+    q.yours = v;
+    const btnNext = `<button class="btn primary" data-act="adv" style="width:100%">Next &rarr;</button>`;
+    if (r) {
+      score++; record(q.c, true);
+      $("#fb").innerHTML = `<div class="feedback ok"><strong>${r === 2 ? "Correct" : "Close enough, counted right"}</strong>${r === 1 ? `<span class="ans">${esc(ans(q.c, q.d))}</span>` : ""}</div>${btnNext}`;
+    } else {
+      buzz(40);
+      $("#fb").innerHTML = `<div class="feedback no"><strong>${skipped ? "Here it is" : "Not quite"}</strong><span class="ans">${esc(ans(q.c, q.d))}</span>${!skipped && v.trim() ? `<span class="yours">You typed: ${esc(v)}</span>` : ""}</div>
+        <div class="row">${!skipped && v.trim() ? `<button class="btn" data-act="override">I was right</button>` : ""}${btnNext}</div>`;
+    }
+    view.querySelector('[data-act="skip"]').hidden = true;
+    $("#typein").readOnly = true;
+    try { view.querySelector('[data-act="adv"]').focus({ preventScroll: true }); } catch (e) {}
+  }
+  act.skip = () => { if (state === "asking") grade("", true); };
+  act.override = () => { if (state !== "wrong") return; state = "right"; score++; record(qs[qi].c, true); qi++; qi < qs.length ? draw() : finish(); };
+  act.adv = () => {
+    if (state === "wrong") { const q = qs[qi]; record(q.c, false); misses.push({ c: q.c, d: q.d, yours: q.yours }); }
+    qi++; qi < qs.length ? draw() : finish();
+  };
+  function finish() {
+    const pct = Math.round(score / qs.length * 100);
+    if (pct === 100) confetti();
+    view.innerHTML = `
+      <div class="panel"><div class="result-head"><div class="big">${score}<small>/${qs.length}</small></div>
+        <h2>${pct === 100 ? "Flawless" : pct >= 80 ? "Strong recall" : pct >= 50 ? "Getting there" : "Keep at it"}</h2><p class="muted">${pct}% from memory</p></div>
+        ${misses.length ? `<button class="btn signal" data-act="retry">Retry the ${misses.length} missed</button>` : ""}
+        <button class="btn primary" data-act="new">New round</button></div>
+      ${misses.length ? `<div><p class="muted" style="margin:0 0 6px">Review what you missed</p>${missList(misses)}</div>` : ""}`;
+  }
+  act.retry = () => begin(shuffle(misses.map(m => m.c)));
+  act.new = () => start("type");
+  opts.pool ? begin(shuffle(opts.pool)) : setup();
+}
+
+// ---------- Speed round ----------
+function Speed() {
+  const SECS = 60;
+  let raf, endAt, score, misses, q, locked, timer, running = false;
+  const bestKey = () => store.settings.cat + ":" + store.settings.dir;
+  function setup() {
+    const best = store.best[bestKey()] || 0;
+    view.innerHTML = `
+      <div class="panel"><h2>60 second speed round</h2>
+        <p class="muted">Answer as many as you can before the clock runs out. Wrong answers cost you time, since the right one flashes before you move on.</p>
+        <div class="topline"><span>Best for this setup</span><span class="score-pill">${best}</span></div>
+        <button class="btn signal" data-act="go">Start the clock</button></div>`;
+  }
+  act.go = () => {
+    if (pool().length < 2) return;
+    score = 0; misses = []; running = true; endAt = performance.now() + SECS * 1000;
+    view.innerHTML = `
+      <div class="topline"><span class="timer" id="tm">${SECS}</span><span class="score-pill" id="sc">0 right</span></div>
+      <div class="bar signal"><span id="tb" style="width:100%"></span></div>
+      <div id="sq"></div>`;
+    tick(); ask1();
+  };
+  function tick() {
+    const left = Math.max(0, endAt - performance.now());
+    const tm = $("#tm"), tb = $("#tb");
+    if (tm) { tm.textContent = Math.ceil(left / 1000); tm.classList.toggle("low", left < 10000); }
+    if (tb) tb.style.width = left / (SECS * 1000) * 100 + "%";
+    if (left <= 0) return finish();
+    raf = requestAnimationFrame(tick);
+  }
+  function ask1() {
+    let c; const p = pool();
+    do { c = p[Math.floor(Math.random() * p.length)]; } while (q && p.length > 1 && c.id === q.c.id);
+    q = makeQuestion(c); locked = false;
+    const isCode = q.d === "b2f";
+    $("#sq").innerHTML = `
+      <div style="display:grid;gap:14px">
+      <div class="prompt" id="sp" style="min-height:130px"><div class="term ${sizeClass(ask(q.c, q.d))}">${esc(ask(q.c, q.d))}</div></div>
+      <div class="options">${q.opts.map(o => `<button class="opt ${isCode ? "code" : ""}" data-act="pick" data-id="${o.id}"><span>${esc(ans(o, q.d))}</span></button>`).join("")}</div></div>`;
+  }
+  act.pick = t => {
+    if (locked || !running) return; locked = true;
+    const ok = +t.dataset.id === q.c.id;
+    record(q.c, ok);
+    view.querySelectorAll(".opt").forEach(b => { if (+b.dataset.id === q.c.id) b.classList.add("right"); else if (b === t) b.classList.add("wrong"); });
+    $("#sp").classList.add(ok ? "flash-ok" : "flash-no");
+    if (ok) { score++; $("#sc").textContent = score + " right"; }
+    else { buzz(40); if (!misses.some(m => m.c.id === q.c.id)) misses.push({ c: q.c, d: q.d, yours: ans(CARDS[+t.dataset.id], q.d) }); }
+    timer = setTimeout(() => { if (running) ask1(); }, ok ? 220 : 900);
+  };
+  function finish() {
+    running = false; cancelAnimationFrame(raf); clearTimeout(timer);
+    const prev = store.best[bestKey()] || 0, isBest = score > prev;
+    if (isBest) { store.best[bestKey()] = score; save(); confetti(); }
+    view.innerHTML = `
+      <div class="panel"><div class="result-head"><div class="big">${score}</div><h2>${isBest ? "New best" : "Time's up"}</h2>
+        <p class="muted">${isBest ? (prev ? `Beat your old best of ${prev}.` : "That's your first score to beat.") : `Your best here is ${prev}.`} ${misses.length ? `${misses.length} missed.` : "No misses."}</p></div>
+        <button class="btn signal" data-act="go">Go again</button></div>
+      ${misses.length ? `<div><p class="muted" style="margin:0 0 6px">Review what you missed</p>${missList(misses)}</div>` : ""}`;
+  }
+  cleanup = () => { running = false; cancelAnimationFrame(raf); clearTimeout(timer); };
+  setup();
+}
+
+// ---------- Missed cards ----------
+function Missed() {
+  let armed = false;
+  function draw() {
+    const ms = pool().filter(missed).sort((a, b) => P(b).wrong - P(a).wrong);
+    if (!ms.length) {
+      view.innerHTML = `<div class="panel empty"><div class="big">0</div><h2>No missed cards</h2><p class="muted">Anything you miss in Learn, Quiz, Type or Speed lands here. A card leaves this list once you get it right twice in a row.</p><button class="btn primary" data-act="toquiz">Take a quiz</button></div>`;
+      return;
+    }
+    view.innerHTML = `
+      <div class="panel"><h2>${ms.length} card${ms.length > 1 ? "s" : ""} to restudy</h2>
+        <p class="muted">Get a card right twice in a row and it drops off this list.</p>
+        <div class="row"><button class="btn primary" data-act="learnm">Learn these</button><button class="btn" data-act="quizm" ${ms.length < 1 ? "disabled" : ""}>Quiz these</button></div>
+        <button class="btn" data-act="typem">Type these from memory</button></div>
+      <div class="list">${ms.map(c => `<div class="li"><span class="c">${esc(c.f)}</span><span class="m">${esc(c.b)}</span><span class="n">missed ${P(c).wrong}&times;</span></div>`).join("")}</div>
+      <button class="btn ghost" data-act="clear">${armed ? "Tap again to clear the list" : "Clear this list"}</button>`;
+  }
+  const list = () => pool().filter(missed);
+  act.learnm = () => start("learn", { pool: list() });
+  act.quizm = () => start("quiz", { pool: list() });
+  act.typem = () => start("type", { pool: list() });
+  act.toquiz = () => go("quiz");
+  act.clear = () => {
+    if (!armed) { armed = true; draw(); setTimeout(() => { armed = false; if (mode === "missed") draw(); }, 3500); return; }
+    list().forEach(c => { store.p[c.key].missed = false; }); save(); armed = false; renderStats(); renderModes(); draw();
+  };
+  draw();
+}
+
+// ---------- confetti ----------
+function confetti() {
+  if (reduceMotion) return;
+  const cv = $("#confetti"), ctx = cv.getContext && cv.getContext("2d"); if (!ctx) return;
+  const dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr; ctx.scale(dpr, dpr);
+  const cs = getComputedStyle(document.documentElement);
+  const cols = ["--accent", "--signal", "--good", "--bad"].map(v => cs.getPropertyValue(v).trim() || "#1f6040");
+  const parts = Array.from({ length: 90 }, () => ({ x: W / 2 + (Math.random() - .5) * 80, y: H * .35, vx: (Math.random() - .5) * 12, vy: -Math.random() * 12 - 4, r: Math.random() * 6 + 4, a: Math.random() * 6, va: (Math.random() - .5) * .4, c: cols[Math.floor(Math.random() * cols.length)] }));
+  const t0 = performance.now();
+  (function frame(t) {
+    ctx.clearRect(0, 0, W, H);
+    for (const p of parts) { p.vy += .35; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.va; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.c; ctx.fillRect(-p.r / 2, -p.r / 3, p.r, p.r * .66); ctx.restore(); }
+    if (t - t0 < 2200) requestAnimationFrame(frame); else ctx.clearRect(0, 0, W, H);
+  })(t0);
+}
+
+// ---------- boot ----------
+if (!CATS.some(c => c[0] === store.settings.cat)) store.settings.cat = "all";
+if (!DIRS.some(d => d[0] === store.settings.dir)) store.settings.dir = "f2b";
+renderFilters(); renderStats();
+start(location.hash.slice(1) || "cards");
+</script>
+</body>
+</html>
